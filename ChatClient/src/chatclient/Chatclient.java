@@ -2,6 +2,10 @@ package chatclient;
 import java.io.*;
 import java.net.*;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+
 import javafx.application.Application; 
 import javafx.geometry.Insets; 
 import javafx.geometry.Pos;
@@ -59,7 +63,7 @@ public class Chatclient extends Application {
 			connectIP = username.getText().trim();
 			try {
 				connected = true;	
-				socket = new Socket(connectIP, 8014); // Create a socket to connect to the server
+				socket = new Socket(connectIP, 8000); // Create a socket to connect to the server
 				} catch (IOException ex) {
 					l1.setText("ENTER SERVER IP: [CONNECTION FAILED]");
 					connected = false;
@@ -119,13 +123,25 @@ public class Chatclient extends Application {
 			while (true) {
 				try {
 					message = reader.readLine();
+					ta.appendText(message + "\n");
+					playSound();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				ta.appendText(message + "\n");
 			}
 		}
 	} 
+	public void playSound() {
+	    try {
+	        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("./notification.wav").getAbsoluteFile());
+	        Clip clip = AudioSystem.getClip();
+	        clip.open(audioInputStream);
+	        clip.start();
+	    } catch(Exception ex) {
+	        System.out.println("Error with playing sound.");
+	        ex.printStackTrace();
+	    }
+	}
 	public static void main(String[] args) {
 		launch(args);
 	}

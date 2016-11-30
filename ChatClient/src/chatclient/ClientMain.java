@@ -62,7 +62,7 @@ public class ClientMain extends Application {
 			}
 		}); try {
 			// Create a socket to connect to the server @SuppressWarnings("resource") 
-			Socket socket = new Socket("localhost", 8014);
+			Socket socket = new Socket("localhost", 8018);
 			// Create an output stream to send data to the server 
 			toServer = new PrintWriter(socket.getOutputStream());
 			// Create an input stream to receive data from the server 

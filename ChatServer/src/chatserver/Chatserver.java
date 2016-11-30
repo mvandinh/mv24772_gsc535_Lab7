@@ -31,7 +31,7 @@ public class Chatserver extends Application
 		new Thread( () -> { 
 			try {  // Create a server socket 
 				clientOutputStreams = new ArrayList<PrintWriter>();
-				ServerSocket serverSocket = new ServerSocket(8014); 
+				ServerSocket serverSocket = new ServerSocket(8000); 
 				ta.appendText("MultiThreadServer started at " + new Date() + '\n'); 
 
 				while (true) { 
