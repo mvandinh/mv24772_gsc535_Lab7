@@ -27,13 +27,21 @@ public class Chatserver extends Application
 		primaryStage.setTitle("MultiThreadServer"); // Set the stage title 
 		primaryStage.setScene(scene); // Place the scene in the stage 
 		primaryStage.show(); // Display the stage 
-
 		new Thread( () -> { 
 			try {  // Create a server socket 
 				clientOutputStreams = new ArrayList<PrintWriter>();
 				ServerSocket serverSocket = new ServerSocket(8000); 
 				ta.appendText("MultiThreadServer started at " + new Date() + '\n'); 
-
+				// exit command
+				primaryStage.setOnCloseRequest( e -> {
+					try {
+						serverSocket.close();
+						Platform.exit();
+						System.exit(0);
+					} catch (Exception e1) {
+						System.out.println("socket closed");
+					}
+				});
 				while (true) { 
 					// Listen for a new connection request 
 					Socket socket = serverSocket.accept(); 
