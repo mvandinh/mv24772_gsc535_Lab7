@@ -1,6 +1,7 @@
 package chatclient;
 import java.io.*;
-import java.net.*; 
+import java.net.*;
+
 import javafx.application.Application; 
 import javafx.geometry.Insets; 
 import javafx.geometry.Pos;
@@ -13,57 +14,119 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 public class Chatclient extends Application {
-	// IO streams 
-	DataOutputStream toServer = null; 
-	DataInputStream fromServer = null;
+	TextArea ta;
+	PrintWriter toServer; 
+	InputStreamReader fromServer;
+	BufferedReader reader;
+	boolean connected;
+	Socket socket;
+	static String clientName = null;
+	static String connectIP = null;
 	@Override
 	public void start(Stage primaryStage) {
-	// Panel p to hold the label and text field 
+			BorderPane pane1 = new BorderPane();
+			TextField username = new TextField();
+			Label l1 = new Label("ENTER USERNAME:");
+			pane1.setTop(l1);
+			pane1.setCenter(username);
+			Scene scene1 = new Scene(pane1, 250, 60);
+			primaryStage.setTitle("Client Log-In");
+			primaryStage.setScene(scene1);
+			primaryStage.show();
+			username.setOnAction(e -> {
+				clientName = username.getText().trim();
+				if (clientName.matches(".*\\s+.*")){
+					username.clear();
+					l1.setText("ENTER USERNAME: [SPACES NOT ALLOWED]");
+				}
+				else{
+					ipenter(primaryStage);
+				}
+			});
+	}
+
+	public void ipenter(Stage primaryStage){
+		BorderPane pane1 = new BorderPane();
+		TextField username = new TextField();
+		Label l1 = new Label("ENTER SERVER IP:");
+		pane1.setTop(l1);
+		pane1.setCenter(username);
+		Scene scene1 = new Scene(pane1, 250, 60);
+		primaryStage.setTitle("Client Log-In");
+		primaryStage.setScene(scene1);
+		primaryStage.show();
+		username.setOnAction(e -> {
+			connectIP = username.getText().trim();
+			try {
+				connected = true;	
+				socket = new Socket(connectIP, 8014); // Create a socket to connect to the server
+				} catch (IOException ex) {
+					l1.setText("ENTER SERVER IP: [CONNECTION FAILED]");
+					connected = false;
+			}
+			if(connected){
+				chatroom(primaryStage);
+			}
+		});
+	}
+	
+	public void chatroom(Stage primaryStage){
+		// panel to hold the the text field and the input
 		BorderPane paneForTextField = new BorderPane(); 
 		paneForTextField.setPadding(new Insets(5, 5, 5, 5)); 
 		paneForTextField.setStyle("-fx-border-color: green"); 
-		paneForTextField.setLeft(new Label("Enter a radius: "));
+		paneForTextField.setLeft(new Label("Message: "));
 		TextField tf = new TextField();
-		tf.setAlignment(Pos.BOTTOM_RIGHT);
+		tf.setAlignment(Pos.BOTTOM_LEFT);
 		paneForTextField.setCenter(tf);
 		BorderPane mainPane = new BorderPane(); 
 		// Text area to display contents
-		TextArea ta = new TextArea(); 
-		mainPane.setCenter(new ScrollPane(ta)); 
-		mainPane.setTop(paneForTextField);
+		ta = new TextArea();
+		ta.setEditable(false);
+		mainPane.setTop(new ScrollPane(ta)); 
+		mainPane.setBottom(paneForTextField);
 		// Create a scene and place it in the stage 
-		Scene scene = new Scene(mainPane, 450, 200); primaryStage.setTitle("Client");
+		Scene scene = new Scene(mainPane, 480, 220);
+		primaryStage.setTitle("Chat Client [" + clientName + "]");
 		// Set the stage title 
 		primaryStage.setScene(scene); 
 		// Place the scene in the stage 
 		primaryStage.show(); 
 		// Display the stage
 		tf.setOnAction(e -> {
+			String message = clientName + ": " + tf.getText().trim();
+			tf.setText("");
+			// Send the message to the server 
+			toServer.println(message); 				
+			toServer.flush();
+			});
 			try {
-				// Get the radius from the text field 
-				double radius = Double.parseDouble(tf.getText().trim());
-				// Send the radius to the server 
-				toServer.writeDouble(radius); 
-				toServer.flush();
-				// Get area from the server 
-				double area = fromServer.readDouble();
-				// Display to the text area 
-				ta.appendText("Radius is " + radius + "\n"); 
-				ta.appendText("Area received from the server is " + area + '\n');
-			} catch (IOException ex) { System.err.println(ex); }
-		}); try {
 			// Create a socket to connect to the server @SuppressWarnings("resource") 
-			Socket socket = new Socket("localhost", 8000); 
-			// Socket socket = new Socket("130.254.204.36", 8000); 
-			// Socket socket = new Socket("drake.Armstrong.edu", 8000);
-			// Create an input stream to receive data from the server 
-			fromServer = new DataInputStream(socket.getInputStream());
 			// Create an output stream to send data to the server 
-			toServer = new DataOutputStream(socket.getOutputStream());
+			toServer = new PrintWriter(socket.getOutputStream());
+			// Create an input stream to receive data from the server 
+			fromServer = new InputStreamReader(socket.getInputStream());
+			reader = new BufferedReader(fromServer);
+			Thread readerThread = new Thread(new IncomingReader());
+			readerThread.start();
 			} catch (IOException ex) {
 				ta.appendText(ex.toString() + '\n');
 			}
-		} public static void main(String[] args) {
-			launch(args);
+	}
+	class IncomingReader implements Runnable {
+		String message;
+		public void run() {
+			while (true) {
+				try {
+					message = reader.readLine();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				ta.appendText(message + "\n");
+			}
+		}
+	} 
+	public static void main(String[] args) {
+		launch(args);
 	}
 }
