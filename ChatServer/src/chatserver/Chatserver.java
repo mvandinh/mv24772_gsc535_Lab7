@@ -15,7 +15,6 @@ import javafx.stage.Stage;
 public class Chatserver extends Application
 { // Text area for displaying contents 
 	private TextArea ta = new TextArea(); 
-	
 	private ArrayList<PrintWriter> clientOutputStreams;
 
 	// Number a client 
@@ -32,7 +31,7 @@ public class Chatserver extends Application
 		new Thread( () -> { 
 			try {  // Create a server socket 
 				clientOutputStreams = new ArrayList<PrintWriter>();
-				ServerSocket serverSocket = new ServerSocket(8000); 
+				ServerSocket serverSocket = new ServerSocket(8014); 
 				ta.appendText("MultiThreadServer started at " + new Date() + '\n'); 
 
 				while (true) { 

@@ -16,10 +16,12 @@ public class ClientMain extends Application {
 	// variables
 	String userName = new String();
 	boolean userNameSet = false;
+	//JavaFX
+	TextArea ta;
 	// IO streams 
-	PrintWriter toServer = null; 
-	InputStreamReader fromServer = null;
-	BufferedReader reader = null;
+	PrintWriter toServer; 
+	InputStreamReader fromServer;
+	BufferedReader reader;
 	@Override
 	public void start(Stage primaryStage) {
 		// panel to hold the the text field and the input
@@ -32,7 +34,8 @@ public class ClientMain extends Application {
 		paneForTextField.setCenter(tf);
 		BorderPane mainPane = new BorderPane(); 
 		// Text area to display contents
-		TextArea ta = new TextArea(); 
+		ta = new TextArea();
+		ta.setEditable(false);
 		mainPane.setTop(new ScrollPane(ta)); 
 		mainPane.setBottom(paneForTextField);
 		// Create a scene and place it in the stage 
@@ -44,34 +47,47 @@ public class ClientMain extends Application {
 		primaryStage.show(); 
 		// Display the stage
 		tf.setOnAction(e -> {
-			try {
-				if (!userNameSet) {
-					userName = tf.getText().trim();
-					userNameSet = true;
-					paneForTextField.setLeft(new Label("Message: "));
-					tf.setText("");
-				} else {
-					String message = userName + ": " + tf.getText().trim();
-					tf.setText("");
-					// Send the message to the server 
-					toServer.println(message); 
-					toServer.flush();
-					String chat = reader.readLine();
-					ta.appendText(chat + "\n");
-				}
-			} catch (IOException ex) { System.err.println(ex); }
+			if (!userNameSet) {
+				userName = tf.getText().trim();
+				userNameSet = true;
+				paneForTextField.setLeft(new Label("Message: "));
+				tf.setText("");
+				primaryStage.setTitle(userName + " Messenger");
+			} else {
+				String message = userName + ": " + tf.getText().trim();
+				tf.setText("");
+				// Send the message to the server 
+				toServer.println(message); 
+				toServer.flush();
+			}
 		}); try {
 			// Create a socket to connect to the server @SuppressWarnings("resource") 
-			Socket socket = new Socket("localhost", 8000);
+			Socket socket = new Socket("localhost", 8014);
 			// Create an output stream to send data to the server 
 			toServer = new PrintWriter(socket.getOutputStream());
 			// Create an input stream to receive data from the server 
 			fromServer = new InputStreamReader(socket.getInputStream());
 			reader = new BufferedReader(fromServer);
+			Thread readerThread = new Thread(new IncomingReader());
+			readerThread.start();
 			} catch (IOException ex) {
 				ta.appendText(ex.toString() + '\n');
+			}
+		
+		} class IncomingReader implements Runnable {
+			String message;
+			public void run() {
+				while (true) {
+					try {
+						message = reader.readLine();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					ta.appendText(message + "\n");
+				}
 			}
 		} public static void main(String[] args) {
 			launch(args);
 	}
 }
+
