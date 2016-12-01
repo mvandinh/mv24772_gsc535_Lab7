@@ -1,16 +1,3 @@
-/* CHATROOM ServerMain.java
- * EE422C Project 7 submission by
- * Minh Van-Dinh
- * mv24772
- * 16475
- * Garrett Custer
- * gsc535
- * 16475
- * Slip days used: <2>
- * Git URL: https://github.com/mvandinh/mv24772_gsc535_Lab7
- * Fall 2016
- */
-
 package chatserver;
 
 import java.io.*;
@@ -29,6 +16,7 @@ public class Chatserver extends Application
 { // Text area for displaying contents 
 	private TextArea ta = new TextArea(); 
 	private ArrayList<PrintWriter> clientOutputStreams;
+	private ArrayList<String> clientNames;
 
 	// Number a client 
 	private int clientNo = 0; 
@@ -37,15 +25,16 @@ public class Chatserver extends Application
 	public void start(Stage primaryStage) { 
 		// Create a scene and place it in the stage 
 		Scene scene = new Scene(new ScrollPane(ta), 480, 220); 
-		ta.setEditable(false);
 		primaryStage.setTitle("MultiThreadServer"); // Set the stage title 
 		primaryStage.setScene(scene); // Place the scene in the stage 
 		primaryStage.show(); // Display the stage 
 		new Thread( () -> { 
 			try {  // Create a server socket 
+				clientNames = new ArrayList<String>();
 				clientOutputStreams = new ArrayList<PrintWriter>();
-				ServerSocket serverSocket = new ServerSocket(8000); 
-				ta.appendText("MultiThreadServer started at " + new Date() + '\n'); 
+				ServerSocket serverSocket = new ServerSocket(6000); 
+				ta.appendText("MultiThreadServer started\n");  
+				//ta.appendText("MultiThreadServer started at " + new Date() + '\n'); 
 				// exit command
 				primaryStage.setOnCloseRequest( e -> {
 					try {
@@ -99,13 +88,70 @@ public class Chatserver extends Application
 				while (true) { 
 					// Receive message from the client 
 					String message = inputFromClient.readLine();
-					for (PrintWriter writer : clientOutputStreams) {
-						writer.println(message);
-						writer.flush();
+					String[] split = message.split("\\s+", 5);
+					if(split.length < 3){
+						for (PrintWriter writer : clientOutputStreams) {
+							writer.println("[GENERAL_CHAT] " + message);
+							writer.flush();
+						}
+						Platform.runLater(() -> { 
+							ta.appendText("message received from client: " + message + '\n'); 
+						});
 					}
-					Platform.runLater(() -> { 
-						ta.appendText("message received from client: " + message + '\n'); 
-					});
+					else{
+						String name = split[0];
+						String colon = split[1];
+						String command = split[2];
+						if(colon.toLowerCase().equals("/register")){	//special case when client first connects
+							ta.appendText("User " + message.split("\\s+")[2] + " has entered the chat.\n"); // user cant enter /register manually
+							clientNames.add(message.split("\\s+")[2]);	//adds client name to clientNames list
+						}
+						else if(command.equals("/listusers")){
+							int i = clientNames.indexOf(name);
+							clientOutputStreams.get(i).println("--CURRENT USERS--");
+							for(String s: clientNames){
+								clientOutputStreams.get(i).println(s);
+							}
+							clientOutputStreams.get(i).flush();
+						}
+						else if(command.equals("/whisper")){
+							String body;
+							if (split.length < 5){
+								body = "";
+							}
+							else{
+								body = split[4];
+							}
+							if(clientNames.contains(split[3])){
+								int i = clientNames.indexOf(split[3]);
+								int j = clientNames.indexOf(split[0]);
+								clientOutputStreams.get(i).println("[" + name + "  -->  " + split[3] + "] : " + body);
+								clientOutputStreams.get(i).flush();
+								clientOutputStreams.get(j).println("[" + name + "  -->  " + split[3] + "] : " + body);
+								clientOutputStreams.get(j).flush();
+							}
+							else{
+								int j = clientNames.indexOf(split[0]);
+								clientOutputStreams.get(j).println("User " + split[3] + " does not exist.");
+								clientOutputStreams.get(j).flush();
+							}
+						}
+						else if(command.equals("/togroup")){
+						
+						}
+						else if(command.equals("/creategroup")){
+						
+						}
+						else{
+							for (PrintWriter writer : clientOutputStreams) {
+								writer.println("[GENERAL_CHAT] " + message);
+								writer.flush();
+							}
+							Platform.runLater(() -> { 
+								ta.appendText("message received from client: " + message + '\n'); 
+							});
+						}
+					}
 				}
 			} catch(IOException e) {
 				e.printStackTrace();
