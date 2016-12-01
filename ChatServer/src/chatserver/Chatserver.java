@@ -17,6 +17,7 @@ public class Chatserver extends Application
 	private TextArea ta = new TextArea(); 
 	private ArrayList<PrintWriter> clientOutputStreams;
 	private ArrayList<String> clientNames;
+	private ArrayList<Group> groups;
 
 	// Number a client 
 	private int clientNo = 0; 
@@ -30,6 +31,7 @@ public class Chatserver extends Application
 		primaryStage.show(); // Display the stage 
 		new Thread( () -> { 
 			try {  // Create a server socket 
+				groups = new ArrayList<Group>();
 				clientNames = new ArrayList<String>();
 				clientOutputStreams = new ArrayList<PrintWriter>();
 				ServerSocket serverSocket = new ServerSocket(6000); 
@@ -137,10 +139,65 @@ public class Chatserver extends Application
 							}
 						}
 						else if(command.equals("/togroup")){
-						
+							String body;
+							if (split.length < 5){
+								body = "";
+							}
+							else{
+								body = split[4];
+							}
+							boolean found = false;
+							Group currentgroup = null;
+							for(Group g: groups){
+								if (g.title.equals(split[3])){
+									currentgroup = g;
+									found = true;
+								}
+							}
+							if (found){
+								for(String s: currentgroup.members){
+									clientOutputStreams.get(clientNames.indexOf(s)).println("[" + currentgroup.title + "] " + name + " : " + body);
+									clientOutputStreams.get(clientNames.indexOf(s)).flush();
+								}
+							}
+							else {
+								clientOutputStreams.get(clientNames.indexOf(name)).println("Group " + split[3] + " does not exist");
+								clientOutputStreams.get(clientNames.indexOf(name)).flush();
+							}
 						}
 						else if(command.equals("/creategroup")){
-						
+							boolean alreadyexists = false;
+							for(Group c: groups){
+								if (split[3].equals(c.title)){
+									alreadyexists = true;
+								}
+							}
+							if (alreadyexists == false){
+								ArrayList<String> memberlist = new ArrayList<String>();
+								String[] names = split[4].split(";");
+								memberlist.add(name);
+								for(String s: names){
+									if (clientNames.contains(s) && !memberlist.contains(s)){
+										memberlist.add(s);
+										clientOutputStreams.get(clientNames.indexOf(s)).println("You've been added to group: " + split[3]);
+										clientOutputStreams.get(clientNames.indexOf(s)).flush();
+									}
+								}
+								groups.add(new Group(split[3], memberlist));
+								int i = clientNames.indexOf(name);
+								clientOutputStreams.get(i).println("Created group with the following users:");
+								for(String s: memberlist){
+									clientOutputStreams.get(i).println(s);
+								}
+							}
+							else{
+								clientOutputStreams.get(clientNames.indexOf(name)).println("A group with the name " + split[3] + " already exists");
+							}
+							clientOutputStreams.get(clientNames.indexOf(name)).flush();
+						}
+						else if(command.equals("/help")){
+							clientOutputStreams.get(clientNames.indexOf(name)).println("/listusers\n/whisper [username] [message]\n/creategroup [groupname] [user1];[user2];[user3];...[userZ]\n/togroup [groupname] [message]");
+							clientOutputStreams.get(clientNames.indexOf(name)).flush();
 						}
 						else{
 							for (PrintWriter writer : clientOutputStreams) {
@@ -158,7 +215,15 @@ public class Chatserver extends Application
 			}
 		}
 	}
-	
+	public class Group{
+		String title;
+		ArrayList<String> members;
+		
+		public Group(String groupname, ArrayList<String> memberlist){
+			title = groupname;
+			members = memberlist;
+		}
+	}
 	public static void main(String[] args) {
 		launch(args);
 	}
