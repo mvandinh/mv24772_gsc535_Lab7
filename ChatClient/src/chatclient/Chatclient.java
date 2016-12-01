@@ -95,7 +95,6 @@ public class Chatclient extends Application {
 		BorderPane mainPane = new BorderPane(); 
 		// Text area to display contents
 		ta = new TextArea();
-		ta.setEditable(false);
 		mainPane.setTop(new ScrollPane(ta)); 
 		mainPane.setBottom(paneForTextField);
 		// Create a scene and place it in the stage 
@@ -118,7 +117,7 @@ public class Chatclient extends Application {
 				ta.appendText("Invalid use of /togroup\n");
 				ta.appendText("/togroup [groupname] [message]\n");
 			}
-			else if(split[2].equals("/creategroup") && (split.length < 3)){
+			else if(split[2].equals("/creategroup") && (split.length < 5)){
 				ta.appendText("Invalid use of /creategroup\n");
 				ta.appendText("/creategroup [groupname] [user1];[user2];[user3];...[userZ]\n");
 			}
