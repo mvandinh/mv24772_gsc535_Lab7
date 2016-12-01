@@ -1,3 +1,16 @@
+/* CHATROOM ClientMain.java
+ * EE422C Project 7 submission by
+ * Minh Van-Dinh
+ * mv24772
+ * 16475
+ * Garrett Custer
+ * gsc535
+ * 16475
+ * Slip days used: <2>
+ * Git URL: https://github.com/mvandinh/mv24772_gsc535_Lab7
+ * Fall 2016
+ */
+
 package chatclient;
 import java.io.*;
 import java.net.*;

@@ -1,3 +1,16 @@
+/* CHATROOM ServerMain.java
+ * EE422C Project 7 submission by
+ * Minh Van-Dinh
+ * mv24772
+ * 16475
+ * Garrett Custer
+ * gsc535
+ * 16475
+ * Slip days used: <2>
+ * Git URL: https://github.com/mvandinh/mv24772_gsc535_Lab7
+ * Fall 2016
+ */
+
 package chatserver;
 
 import java.io.*;
@@ -24,6 +37,7 @@ public class Chatserver extends Application
 	public void start(Stage primaryStage) { 
 		// Create a scene and place it in the stage 
 		Scene scene = new Scene(new ScrollPane(ta), 480, 220); 
+		ta.setEditable(false);
 		primaryStage.setTitle("MultiThreadServer"); // Set the stage title 
 		primaryStage.setScene(scene); // Place the scene in the stage 
 		primaryStage.show(); // Display the stage 
@@ -36,8 +50,6 @@ public class Chatserver extends Application
 				primaryStage.setOnCloseRequest( e -> {
 					try {
 						serverSocket.close();
-						Platform.exit();
-						System.exit(0);
 					} catch (Exception e1) {
 						System.out.println("socket closed");
 					}
