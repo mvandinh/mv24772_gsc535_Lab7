@@ -1,16 +1,3 @@
-/* CHATROOM ClientMain.java
- * EE422C Project 7 submission by
- * Minh Van-Dinh
- * mv24772
- * 16475
- * Garrett Custer
- * gsc535
- * 16475
- * Slip days used: <2>
- * Git URL: https://github.com/mvandinh/mv24772_gsc535_Lab7
- * Fall 2016
- */
-
 package chatclient;
 import java.io.*;
 import java.net.*;
@@ -76,13 +63,22 @@ public class Chatclient extends Application {
 			connectIP = username.getText().trim();
 			try {
 				connected = true;	
-				socket = new Socket(connectIP, 8000); // Create a socket to connect to the server
+				socket = new Socket(connectIP, 6000); // Create a socket to connect to the server
 				} catch (IOException ex) {
 					l1.setText("ENTER SERVER IP: [CONNECTION FAILED]");
 					connected = false;
 			}
 			if(connected){
-				chatroom(primaryStage);
+				try{
+					toServer = new PrintWriter(socket.getOutputStream());
+					// Create an input stream to receive data from the server 
+					fromServer = new InputStreamReader(socket.getInputStream());
+					toServer.println(clientName + ": /register " + clientName); 				
+					toServer.flush();
+					chatroom(primaryStage);
+				} catch (IOException ex) {
+					ta.appendText(ex.toString() + '\n');
+				}
 			}
 		});
 	}
@@ -111,24 +107,23 @@ public class Chatclient extends Application {
 		primaryStage.show(); 
 		// Display the stage
 		tf.setOnAction(e -> {
-			String message = clientName + ": " + tf.getText().trim();
+			String message = clientName + " : " + tf.getText().trim();
 			tf.setText("");
-			// Send the message to the server 
-			toServer.println(message); 				
-			toServer.flush();
+			String[] split = message.split("\\s+");
+			if(split[2].equals("/whisper") && (split.length < 4)){
+				ta.appendText("Must specify a user to whisper to \n");
+			}
+			else{
+				// Send the message to the server 
+				toServer.println(message); 				
+				toServer.flush();
+				}
 			});
-			try {
 			// Create a socket to connect to the server @SuppressWarnings("resource") 
 			// Create an output stream to send data to the server 
-			toServer = new PrintWriter(socket.getOutputStream());
-			// Create an input stream to receive data from the server 
-			fromServer = new InputStreamReader(socket.getInputStream());
 			reader = new BufferedReader(fromServer);
 			Thread readerThread = new Thread(new IncomingReader());
 			readerThread.start();
-			} catch (IOException ex) {
-				ta.appendText(ex.toString() + '\n');
-			}
 	}
 	class IncomingReader implements Runnable {
 		String message;
