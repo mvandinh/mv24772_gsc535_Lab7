@@ -111,7 +111,16 @@ public class Chatclient extends Application {
 			tf.setText("");
 			String[] split = message.split("\\s+");
 			if(split[2].equals("/whisper") && (split.length < 4)){
-				ta.appendText("Must specify a user to whisper to \n");
+				ta.appendText("Invalid use of /whisper\n");
+				ta.appendText("/whisper [username] [message]\n");
+			}
+			else if(split[2].equals("/togroup") && (split.length < 4)){
+				ta.appendText("Invalid use of /togroup\n");
+				ta.appendText("/togroup [groupname] [message]\n");
+			}
+			else if(split[2].equals("/creategroup") && (split.length < 3)){
+				ta.appendText("Invalid use of /creategroup\n");
+				ta.appendText("/creategroup [groupname] [user1];[user2];[user3];...[userZ]\n");
 			}
 			else{
 				// Send the message to the server 
